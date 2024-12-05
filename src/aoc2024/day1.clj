@@ -1,12 +1,34 @@
 (ns aoc2024.day1
-  (:gen-class))
+  (:require [util :refer [read-input]]))
 
-(defn greet
-  "Callable entry point to the application."
-  [data]
-  (println (str "Hello, " (or (:name data) "World") "!")))
+(def input
+  (read-input "day1.txt"))
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (greet {:name (first args)}))
+(defn parse-input
+  [input]
+  (->> input
+       (mapcat #(re-seq #"\d+" %))
+       (map parse-long)
+       (partition 2)
+       (apply mapv vector)))
+
+(defn solve-part1
+  []
+  (->> (parse-input input)
+       (map sort)
+       (apply map -)
+       (map abs)
+       (apply +)))
+
+(defn calc-point
+  [info id]
+  (when-let [freq (get info id)]
+    (* freq id)))
+
+(defn solve-part2
+  []
+  (let [[left right] (parse-input input)
+        right-freq-info (frequencies right)]
+    (->> left
+         (keep #(calc-point right-freq-info %))
+         (apply +))))
