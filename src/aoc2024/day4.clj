@@ -25,20 +25,16 @@
                    (= (get-in (:board board) [nx ny]) (first path')))
           (find-xmas-from board nx ny path' direction))))))
 
-(defn find-xmas
-  [board]
-  (let [pattern "XMAS"]
-    (for [x (range (:height board))
-          y (range (:width board))
-          direction [[-1 -1] [-1 0] [-1 1] [0 -1] [0 1] [1 -1] [1 0] [1 1]]
-          :when (and (= (get-in (:board board) [x y]) (first pattern))
-                     (find-xmas-from board x y pattern direction))]
-      [x y direction])))
-
 (defn solve-part1
   [input]
-  (let [board (create-board input)]
-    (find-xmas board)))
+  (count (let [board (create-board input)
+               pattern "XMAS"]
+           (for [x (range (:height board))
+                 y (range (:width board))
+                 direction [[-1 -1] [-1 0] [-1 1] [0 -1] [0 1] [1 -1] [1 0] [1 1]]
+                 :when (and (= (get-in (:board board) [x y]) (first pattern))
+                            (find-xmas-from board x y pattern direction))]
+             [x y direction]))))
 
 (comment
-  (count (solve-part1 "day4.txt")))
+  (solve-part1 "day4.txt"))
