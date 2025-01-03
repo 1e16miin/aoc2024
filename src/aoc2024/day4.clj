@@ -36,5 +36,31 @@
                             (find-xmas-from board x y pattern direction))]
              [x y direction]))))
 
+
+(defn find-mas-x
+  [board x y]
+  (let [positions (map (fn [direction]
+                         (let [[dx dy] direction]
+                           [[(+ x dx) (+ y dy)]]))
+                       [[-1 -1] [-1 1] [1 -1] [1 1]])
+        chars (map (fn [pos]
+                     (map (fn [[nx ny]]
+                            (when (in-bounds? nx ny board)
+                              (get-in (:board board) [nx ny])))
+                          pos))
+                   positions)
+        available-patterns ['(\M \S \M \S) '(\M \M \S \S) '(\S \S \M \M) '(\S \M \S \M)]]
+    (some #(= (flatten chars) %) available-patterns)))
+
+(defn solve-part2
+  [input]
+  (count (let [board (create-board input)]
+           (for [x (range (:height board))
+                 y (range (:width board))
+                 :when (and (= (get-in (:board board) [x y]) \A)
+                            (find-mas-x board x y))]
+             [x y]))))
+
 (comment
-  (solve-part1 "day4.txt"))
+  (solve-part1 "day4.txt")
+  (solve-part2 "day4.txt"))
