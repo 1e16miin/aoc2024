@@ -1,11 +1,6 @@
 (ns aoc2024.day6
   (:require [util :refer [read-input]]))
 
-(defn inspect
-  [x]
-  (prn x)
-  x)
-
 (defn find-coordinates
   [target height flatten-input]
   (keep-indexed (fn [idx val]
