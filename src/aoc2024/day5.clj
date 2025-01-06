@@ -4,27 +4,18 @@
 (defn parse-input
   [file-name]
   (let [input (read-input file-name)
-        ordering-rules (->> input
-                            (take-while #(not= "" %))
+        [section1 _ section2] (partition-by #(= "" %) input)
+        ordering-rules (->> section1
                             (map #(re-matches #"(\d+)\|(\d+)" %))
                             (map (fn [[_ before after]] [before after]))
                             set)
-        orders (->> input
-                    (drop-while #(not= "" %))
-                    (map #(re-seq #"\d+" %))
-                    rest)]
+        orders (map #(re-seq #"\d+" %) section2)]
     {:ordering-rules ordering-rules
      :orders orders}))
 
-(defn correct?
-  [ordering-rules [first & rest]]
-  (let [combinations (for [second rest]
-                       [first second])]
-    (every? ordering-rules combinations)))
-
 (defn valid-order?
   [ordering-rules order]
-  (every? #(correct? ordering-rules %) (partition 2 1 order)))
+  (every? ordering-rules (partition 2 1 order)))
 
 (defn middle-element
   [lst]
