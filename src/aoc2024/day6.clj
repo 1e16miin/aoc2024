@@ -43,5 +43,28 @@
         start-pos (find-start parsed-grid)]
     (count (set (find-escape-path parsed-grid start-pos)))))
 
+
+(defn simulate-guard [grid start-pos obstacle-pos]
+  (let [grid (if obstacle-pos
+               (assoc-in grid obstacle-pos \#)
+               grid)
+        initial-state (conj start-pos 0)]
+    (loop [state initial-state
+           visited #{}]
+      (if (visited state)
+        true ; 루프 발생
+        (let [next (next-state grid state)]
+          (if (nil? next)
+            false ; 지도 밖으로 탈출
+            (recur next (conj visited state)))))))) ; 루프 발생 여부 확인
+
+(defn solve-part2 [file-name]
+  (let [input (read-input file-name)
+        parsed-grid (parse-grid input)
+        start-pos (find-start parsed-grid)
+        escape-path (find-escape-path parsed-grid start-pos)]
+    (count (filter #(simulate-guard parsed-grid start-pos %) (set escape-path)))))
+
 (comment
-  (solve-part1 "day6.txt"))
+  (solve-part1 "day6.txt")
+  (solve-part2 "day6.txt"))
