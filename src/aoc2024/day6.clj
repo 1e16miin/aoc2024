@@ -1,78 +1,47 @@
 (ns aoc2024.day6
   (:require [util :refer [read-input]]))
 
-(defn find-coordinates
-  [target height flatten-input]
-  (keep-indexed (fn [idx val]
-                  (when (= val target)
-                    (let [x (rem idx height)
-                          y (quot idx height)]
-                      [x y])))
-                flatten-input))
+(defn parse-grid [grid]
+  (mapv vec grid))
 
-(defn get-board
-  [file-name]
+(defn directions []
+  [[-1 0] [0 1] [1 0] [0 -1]]) ; 위(0), 오른쪽(1), 아래(2), 왼쪽(3)
+
+(defn in-bounds? [grid [x y]]
+  (and (>= x 0) (< x (count grid))
+       (>= y 0) (< y (count (grid 0)))))
+
+(defn find-start [grid]
+  (some (fn [[x row]]
+          (some (fn [[y cell]]
+                  (when (= cell \^)
+                    [x y]))
+                (map vector (range) row)))
+        (map vector (range) grid)))
+
+(defn next-state [grid [x y direction]]
+  (let [directions (directions)
+        [dx dy] (nth directions direction)
+        nx (+ x dx)
+        ny (+ y dy)]
+    (if (in-bounds? grid [nx ny])
+      (if (= \# (get-in grid [nx ny]))
+        [x y (mod (inc direction) 4)] ; 오른쪽으로 90도 회전
+        [nx ny direction]) ; 다음 위치로 이동
+      nil))) ; 지도 밖으로 나가면 nil 반환
+
+(defn find-escape-path [grid start-pos]
+  (->> (iterate (fn [[x y direction]]
+                  (next-state grid [x y direction]))
+                (conj start-pos 0)) ; 시작 위치와 방향(위쪽) 추가
+       (take-while some?) ; nil이 나올 때까지 반복
+       (map (fn [[x y _]] [x y])))) ; 위치만 추출
+
+(defn solve-part1 [file-name]
   (let [input (read-input file-name)
-        height (count input)
-        width (count (first input))
-        flatten-input (->> input
-                           (apply str)
-                           seq)
-        obstructions (find-coordinates \# height flatten-input)
-        start-point (first (find-coordinates \^ height flatten-input))]
-    {:obstructions (set obstructions)
-     :point start-point
-     :height height
-     :width width
-     :direction :u
-     :path []}))
-
-(def direction-relation
-  {:u :r
-   :r :d
-   :d :l
-   :l :u})
-
-(defn in-range?
-  [{:keys [point height width]}]
-  (let [[x y] point]
-    (and (< 0 x width) (< 0 y height))))
-
-(defn next-point
-  [direction point]
-  (case direction
-    :u (mapv + point [0 -1])
-    :r (mapv + point [1 0])
-    :d (mapv + point [0 1])
-    :l (mapv + point [-1 0])))
-
-(defn exit
-  [{:keys [point obstructions direction path] :as board}]
-  (let [path' (conj path point)
-        point' (next-point direction point)
-        obstruction? (contains? obstructions point')
-        direction' (if obstruction?
-                     (direction-relation direction)
-                     direction)
-        next-point (if obstruction?
-                     (next-point direction' point)
-                     point')]
-    (-> board
-        (assoc :point next-point)
-        (assoc :direction direction')
-        (assoc :path path'))))
-
-(defn solve-part1
-  [file-name]
-  (let [board (get-board file-name)
-        final-state (->> (iterate exit board)
-                         (drop-while in-range?)
-                         first)]
-    (-> final-state
-        :path
-        set
-        count)))
+        parsed-grid (parse-grid input)
+        start-pos (find-start parsed-grid)]
+    (set (find-escape-path parsed-grid start-pos))))
 
 (comment
-  (solve-part1 "day6.txt")
-  (get-board "day6_sample.txt"))
+  (count (solve-part1 "day6.txt")))
