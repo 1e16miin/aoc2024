@@ -41,7 +41,7 @@
   (let [input (read-input file-name)
         parsed-grid (parse-grid input)
         start-pos (find-start parsed-grid)]
-    (set (find-escape-path parsed-grid start-pos))))
+    (count (set (find-escape-path parsed-grid start-pos)))))
 
 (comment
-  (count (solve-part1 "day6.txt")))
+  (solve-part1 "day6.txt"))
