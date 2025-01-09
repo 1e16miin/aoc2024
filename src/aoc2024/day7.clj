@@ -11,46 +11,33 @@
   (->> (read-input file-name)
        (map parse-line)))
 
-(defn generate-operations
-  [n ops]
-  (if (= n 1)
-    [[]]
-    (->> (generate-operations (dec n) ops)
-         (mapcat (fn [seq]
-                   (map #(conj seq %) ops))))))
-
-(defn calculate
-  [result [start & rests] operations]
-  (reduce
-   (fn [partial [op number]]
-     (if (> partial result)
-       (reduced partial)
-       (case op
-         "*" (* partial number)
-         "+" (+ partial number)
-         (parse-long (str partial number)))))
-   start
-   (map vector operations rests)))
+(defn find-valid-operations
+  [numbers target current-value rest-numbers]
+  (if (empty? rest-numbers)
+    (= current-value target)
+    (let [next-num (first rest-numbers)
+          remaining (rest rest-numbers)]
+      (or (find-valid-operations numbers target
+                                 (+ current-value next-num)
+                                 remaining)
+          (find-valid-operations numbers target
+                                 (* current-value next-num)
+                                 remaining)
+          ;; for part2
+          (find-valid-operations numbers target
+                                 (parse-long (str current-value next-num))
+                                 remaining)))))
 
 (defn equal?
-  [ops [result & numbers]]
-  (let [operations-sets (generate-operations (count numbers) ops)
-        calculate-results (map #(calculate result numbers %) operations-sets)]
-    (contains? (set calculate-results) result)))
+  [[result & numbers]]
+  (find-valid-operations numbers result (first numbers) (rest numbers)))
 
-(defn solve-part1
+(defn solve
   [file-name]
   (->> (get-equations file-name)
-       (filter #(equal? ["*" "+"] %))
-       (map first)
-       (apply +)))
-
-(defn solve-part2
-  [file-name]
-  (->> (get-equations file-name)
-       (filter #(equal? ["||" "*" "+"] %))
+       (filter equal?)
        (map first)
        (apply +)))
 
 (comment
-  (solve-part2 "day7.txt"))
+  (solve "day7.txt"))
